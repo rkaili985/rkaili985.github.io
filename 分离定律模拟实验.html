@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孟德尔性状分离比模拟实验</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .title {
+            text-align: center;
+            color: #333;
+            margin: 10px 0 20px 0;
+            font-size: 26px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px auto 40px;
+            position: relative;
+            height: 290px;
+            padding-top: 30px;
+        }
+        .bucket {
+            width: 280px;
+            height: 250px;
+            border: 4px solid #8b451e;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            background: linear-gradient(145deg, #d4b898, #bc9e7a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        .bucket-title {
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #222;
+            font-size: 18px;
+        }
+        .ball {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 4px;
+            font-size: 16px;
+            position: relative;
+            transition: all 0.25s ease;
+
+            box-shadow: 
+                0 10px 15px rgba(0,0,0,0.4),
+                0 -6px 8px rgba(255,255,255,0.6) inset,
+                0 8px 10px rgba(0,0,0,0.3) inset;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .ball-a {
+            background: radial-gradient(circle at 35% 35%, #ffff99, #ffdd00);
+            color: #000;
+            filter: brightness(1.2) saturate(1.3);
+        }
+        .ball-b {
+            background: radial-gradient(circle at 35% 35%, #64b5f6, #0d47a1);
+            color: #fff;
+            filter: brightness(1.25) saturate(1.4);
+        }
+        .center-area{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            width: 150px;
+            height: 100px;
+            border: 2px dashed #666;
+            border-radius:12px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:20px;
+            z-index: 10;
+        }
+        .combine-text{
+            text-align:center;
+            font-size:22px;
+            margin:15px 0;
+            min-height:30px;
+            font-weight: bold;
+        }
+        .control {
+            text-align: center;
+            margin: 25px 0;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 0 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .pause-btn{
+            background-color:#f39c12;
+        }
+        .reset-btn{
+            background-color:#e74c3c;
+        }
+        .result {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 40px;
+        }
+        .data-wrap{
+            flex:1;
+        }
+        .chart-wrap{
+            width: 420px;
+            height: 280px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ccc;
+            font-size: 16px;
+        }
+        .input-group {
+            margin: 20px 0;
+            text-align: center;
+        }
+        #customTimes {
+            padding: 10px 15px;
+            font-size: 16px;
+            width: 140px;
+            border-radius: 6px;
+            border:1px solid #ccc;
+        }
+        .balls-group{
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:center;
+            align-content: center;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">孟德尔一对相对性状性状分离比模拟实验</h1>
+
+    <div class="container">
+        <div class="bucket">
+            <div class="bucket-title">雌配子桶</div>
+            <div class="balls-group" id="femaleBalls"></div>
+        </div>
+        <div class="center-area" id="centerBox"></div>
+        <div class="bucket">
+            <div class="bucket-title">雄配子桶</div>
+            <div class="balls-group" id="maleBalls"></div>
+        </div>
+    </div>
+
+    <div class="combine-text" id="combineShow">等待抽取配子结合</div>
+
+    <div class="input-group">
+        <input type="number" id="customTimes" placeholder="输入次数" min="1">
+        <button onclick="startCustomExperiment()">开始自定义实验</button>
+    </div>
+
+    <div class="control">
+        <button onclick="startExperiment(1)">实验 1 次</button>
+        <button onclick="startExperiment(20)">实验 20 次</button>
+        <button onclick="startExperiment(100)">实验 100 次</button>
+        <button onclick="startExperiment(1000)">实验 1000 次</button>
+        <button class="pause-btn" onclick="togglePause()">暂停/继续</button>
+        <button class="reset-btn" onclick="resetData()">清空重置</button>
+    </div>
+
+    <div class="result">
+        <div class="data-wrap">
+            <h3>实验统计结果</h3>
+            <div class="data-row"><span>总实验次数：</span><span id="total">0</span></div>
+            <div class="data-row"><span>AA 基因型次数：</span><span id="aa">0</span></div>
+            <div class="data-row"><span>Aa 基因型次数：</span><span id="ab">0</span></div>
+            <div class="data-row"><span>aa 基因型次数：</span><span id="bb">0</span></div>
+            <div class="data-row"><span>基因型比例（AA:Aa:aa）：</span><span id="ratio-geno">0:0:0</span></div>
+            <div class="data-row"><span>性状分离比（显性:隐性）：</span><span id="ratio-pheno">0:1</span></div>
+        </div>
+        <div class="chart-wrap">
+            <h3 style="text-align:center;margin:0 0 10px;font-size:16px;">分离比变化曲线</h3>
+            <canvas id="ratioChart" style="width:100%;height:100%;"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let total = 0, aa = 0, ab = 0, bb = 0;
+        const centerBox = document.getElementById('centerBox');
+        const femaleBalls = document.getElementById('femaleBalls');
+        const maleBalls = document.getElementById('maleBalls');
+        const combineShow = document.getElementById('combineShow');
+        const speed = 240;
+
+        const femaleAll = ['A','A','A','A','A','a','a','a','a','a'];
+        const maleAll = ['A','A','A','A','A','A','A','A','A','A','a','a','a','a','a','a','a','a','a','a'];
+
+        let femaleHTML = '';
+        let maleHTML = '';
+        let chartPoints = [], ratioLabels = [];
+        let chart = null, isPause = false;
+
+        function shuffle(arr) {
+            let a = [...arr];
+            for(let i=a.length-1;i>0;i--){
+                let j = Math.floor(Math.random()*(i+1));
+                [a[i],a[j]] = [a[j],a[i]];
+            }
+            return a;
+        }
+
+        function initBucketBalls() {
+            let f = shuffle(femaleAll);
+            let m = shuffle(maleAll);
+            femaleHTML = f.map(c => `<div class="ball ${c==='A'?'ball-a':'ball-b'}">${c}</div>`).join('');
+            maleHTML = m.map(c => `<div class="ball ${c==='A'?'ball-a':'ball-b'}">${c}</div>`).join('');
+            femaleBalls.innerHTML = femaleHTML;
+            maleBalls.innerHTML = maleHTML;
+        }
+
+        function getRandomType(pool) {
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function removeOneBall(html, type) {
+            let dom = new DOMParser().parseFromString(html, 'text/html');
+            let balls = [...dom.querySelectorAll('.ball')];
+            let idx = balls.findIndex(b => b.innerText === type);
+            if (idx >= 0) balls.splice(idx, 1);
+            return balls.map(n => n.outerHTML).join('');
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+        function togglePause() { isPause = !isPause; }
+        async function pauseCheck() { while (isPause) await sleep(50); }
+
+        async function singleDraw() {
+            await pauseCheck();
+            centerBox.innerHTML = '';
+
+            const fType = getRandomType(femaleAll);
+            const mType = getRandomType(maleAll);
+
+            femaleBalls.innerHTML = removeOneBall(femaleHTML, fType);
+            maleBalls.innerHTML = removeOneBall(maleHTML, mType);
+            await sleep(speed);
+
+            let zygote = fType + mType;
+            let displayZygote = zygote;
+            if(zygote === "Aa" || zygote === "aA"){
+                displayZygote = "Aa";
+            }
+
+            centerBox.innerHTML = `
+                <div class="ball ${fType==='A'?'ball-a':'ball-b'}">${fType}</div>
+                <div class="ball ${mType==='A'?'ball-a':'ball-b'}">${mType}</div>
+            `;
+            combineShow.innerText = `雌${fType} + 雄${mType} → 合子：${displayZygote}`;
+            await sleep(speed * 1.2);
+
+            centerBox.innerHTML = '';
+            femaleBalls.innerHTML = femaleHTML;
+            maleBalls.innerHTML = maleHTML;
+            await sleep(speed / 2);
+
+            return displayZygote;
+        }
+
+        function initChart() {
+            chart = new Chart(ratioChart, {
+                type: 'line',
+                data: {
+                    labels: ratioLabels,
+                    datasets: [{
+                        label: '显性/隐性比值',
+                        data: chartPoints,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231,76,60,0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true }, x: { title: { display: true, text: '次数' } } }
+                }
+            });
+        }
+
+        function updateResultAndChart() {
+            document.getElementById('total').textContent = total;
+            document.getElementById('aa').textContent = aa;
+            document.getElementById('ab').textContent = ab;
+            document.getElementById('bb').textContent = bb;
+
+            const min = Math.min(aa,ab,bb) || 1;
+            document.getElementById('ratio-geno').textContent = `${(aa/min).toFixed(1)}:${(ab/min).toFixed(1)}:${(bb/min).toFixed(1)}`;
+            
+            // ✅ 核心修改：永远显示 几:1
+            const dominant = aa + ab;
+            const recessive = bb || 1;
+            const ratio = (dominant / recessive).toFixed(1);
+            document.getElementById('ratio-pheno').textContent = `${ratio}:1`;
+
+            ratioLabels.push(total);
+            chartPoints.push(isFinite(dominant/recessive)?(dominant/recessive).toFixed(1):0);
+            chart.update();
+        }
+
+        async function startExperiment(times) {
+            for(let i=0;i<times;i++){
+                let g = await singleDraw();
+                total++;
+                g==='AA'?aa++ : g==='Aa'?ab++ : bb++;
+                updateResultAndChart();
+            }
+        }
+
+        function startCustomExperiment() {
+            let v = parseInt(customTimes.value);
+            if(v>0) startExperiment(v);
+        }
+
+        function resetData() {
+            total=aa=ab=bb=0;
+            isPause = false;
+            combineShow.innerText = '等待抽取配子结合';
+            ratioLabels.length=0;
+            chartPoints.length=0;
+            chart.update();
+            initBucketBalls();
+            updateResultAndChart();
+        }
+
+        window.onload = () => {
+            initChart();
+            initBucketBalls();
+            updateResultAndChart();
+        };
+    </script>
+</body>
+</html>
